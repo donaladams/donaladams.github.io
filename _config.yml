@@ -7,7 +7,7 @@
 
 # Site settings
 title: General Dabblement
-email: info@epilepticfish.com
+email:
 description:
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://www.epilepticfish.com" # the base hostname & protocol for your site
