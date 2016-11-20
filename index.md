@@ -11,3 +11,4 @@ I'm currently working as a Senior Platform Engineering at [Nitro](https://www.go
 I like to use Python, Scala, Java and the usual web technologies but again, I love trying out new things.
 
 
+{% include post-list.html %}
