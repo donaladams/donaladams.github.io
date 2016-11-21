@@ -1,42 +1,70 @@
 ---
 layout: post
-title:  "Parsing User Input in SBT"
-date:   2016-04-19 12:00:00 +0100
+title: Parsing user input in SBT
+date: 2016-04-19 12:00:00 +0100
 categories: blog
 ---
 
-SBT is an incredibly powerful tool but is easily misunderstood. There's quite good support for low-level handling of user input in custom InputTasks but it can be difficult to get started and reading the source was definitely necessary to get stuff done.
+I've been working with Scala for the past two years and like many (most?) Scala developers, I've had a love-hate relationship with SBT. SBT is a powerful tool but it's easy to lose your footing. There have been some rude branch names at times when SBT just wouldn't do what I wanted [^1].
 
-The goal of this post is to make it easier for others coming across this problem.
+The most recent such branch came about during a recent hackweek at [Nitro](www.gonitro.com). We were working on an SBT plugin to help us easily create and manage our build jobs in Jenkins. This was the first time I needed to handle command line input in SBT (other than handling simple environment variables). This post is based on the things I learned in the process. I hope it will be useful to others going down the same path.
 
-## git checkout -b \*\*\*\*-sbt
+First, we'll look at what SBT provides for writing commands line tools in general. After this, we'll look at a specific example of how to do this.
 
-I've been working with Scala for the past two years and like many (most?) Scala developers, I've had a bit of a love-hate relationship with SBT. There have been some rude branch names at times when SBT just wouldn't do what I wanted (I'm sure I'm not the only one to do this). To be fair, the problem is not just SBT - my lack of understanding of SBT has definitely gotten in the way too.
+# Listen to me, SBT
 
-My most recent frustration came about during a recent hackweek at [Nitro](www.gonitro.com). We were working on an SBT plugin to help us easily create and manage our build jobs in Jenkins. This was the first time I had worked on an SBT plugin, stepping from the cosy (?) realm of casual SBT user to SBT plugin author. As we were writing a command line tool, the time came that we needed to handle command line options. Enter `sbt.complete.Parsers` and `sbt.InputTask`
+When you want to add a command-line utility to an SBT project, you essentially have two options:
 
-## Parsers and InputTasks
+1. Add an `InputTask`
+2. Add a `Command`
 
-I'm not going to describe SBT from the ground up but a quick refresher of the relevant parts is in order. SBT builds are big maps of keys to values. There are three types of values that can be in this map:
+InputTasks and Commands are quite similar and can both be used to add command line utilities to your project. The similarity can be seen in the signatures of their constructors.
 
-1. Settings - these are static values that are computed once and never change (think `val`)
-2. Tasks - these are computed every time they're required (think `Unit => T`)
-3. InputTasks - these are like tasks with user input (think `String => T`)
-
-We're going to concern ourselves with InputTasks as this is where the user input comes in. Here's the definition of InputTask in sbt:
+Here's a simplified definition of `InputTask` [^2]:
 
 {% highlight scala %}
-class InputTask[T](val parser: State => Parser[Task[T]])
+final class InputTask[T] private (val parser: State => Parser[Task[T]]) {
+    ...
+}
 {% endhighlight %}
 
+As you can see its single argument is a function that produces a parser of some sort. More on this in a moment.
 
-To make things more concrete, let's use an example that should be familiar to any developer.
+Here's one of `Command`'s factory functions [^3]:
+
+{% highlight scala %}
+object Command {
+    def apply[T](name: String, help: Help = Help.empty)(parser: State => Parser[T])(effect: (State, T) => State): Command
+}
+{% endhighlight %}
+
+The point of similarity with `InputTask` here is the parser argument which is another function of `State => Parser`.
+
+So what are `State` and `Parser` and how do they help us write useful tools in sbt?
+
+# State
+
+Well actually, `State` doesn't really help us much if we want to add simple command-line utilities so let's leave that for another day!
+
+# Parser[T]
+
+`Parser[T]` is the tool that SBT provides to, as you might have guessed, parse command line input. Parsers operate on `String` or `Char` input and can produce an arbitrary value `T` if successful. SBT provides a number of parsers out of the box that you can use immediately. Small parsers can be combined in many was to create more complex parsers.\
+
+Here's an example parser that
+
+```scala
+
+import sbt.complete.DefaultParsers._ // predefined parsers live here
+
+
+// Parser that matches "hello <name>!" and returns <name>
+val helloWorld: Parser[String] = "hello" ~> Space ~> StringBasic <~ '!' <~ EOF
+
+```
 
 ## mkdir
 
-`mkdir` is among the first unix commands that you come across when you start using the command line for the first time.
-
-As a reminder:
+To make things more concrete, let's use an example that should be familiar. `mkdir` is among the first unix commands that you come across when you start using the command line. As a reminder, here's what it looks like:
 
 `mkdir [-pv] [-m mode] directory_name ...`
 
@@ -44,6 +72,21 @@ We have two flags, `-p` for creating intermediate directories and `-v` for verbo
 which specifies the permissions on the created directories, and finally one or more directory names to create.
 
 Now let's go about writing `sbt mkdir`!
+
+
+
+
+
+{% comment %} PARSER VS SCOPT {% endcomment%}
+
+
+{% comment %} CONCLUSION {% endcomment%}
+
+
+[^1]: `git checkout -b ****-sbt`
+[^2]: [InputTask.scala](https://github.com/sbt/sbt/blob/0.13/main/settings/src/main/scala/sbt/InputTask.scala)
+[^3]: [Command.scala](https://github.com/sbt/sbt/blob/0.13/main/command/src/main/scala/sbt/Command.scala)
+
 
 
 

@@ -11,3 +11,4 @@ I've worked for Apple as a software engineer on Maps, Caffeinehit Ltd as the lea
 I like to use Python, Scala, Java and the usual web technologies but again, I love trying out new things.
 
 
+{% include post-list.html %}

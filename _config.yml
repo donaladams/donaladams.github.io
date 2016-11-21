@@ -9,3 +9,6 @@ github_username:  epileptic-fish
 
 # Build settings
 markdown: kramdown
+
+# permalink: none
+permalink: /blog/:title
