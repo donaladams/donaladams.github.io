@@ -5,7 +5,7 @@ date: 2016-11-23 12:00:00 +0100
 categories: blog
 ---
 
-I've been working with Scala for the last couple of years and like many, if not most, Scala developers, I've had my ups and downs with SBT. SBT is a powerful tool but it's easy to lose your footing.
+I've been working with Scala for the last couple of years and like many (if not most) Scala developers, I've had my ups and downs with SBT. SBT is a powerful tool but it's easy to lose your footing.
 
 During our most recent hackweek at [Nitro](http://www.gonitro.com) I worked on an SBT plugin with some colleagues to help us create and manage our build pipelines in Jenkins. This was the first time I needed to handle proper command line input in SBT.
 
