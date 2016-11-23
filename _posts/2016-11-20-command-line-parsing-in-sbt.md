@@ -5,13 +5,15 @@ date: 2016-11-23 12:00:00 +0100
 categories: blog
 ---
 
-I've been working with Scala for the lastcouple of years and like many, if not most, Scala developers, I've had my ups and downs with SBT. SBT is a powerful tool but it's easy to lose your footing.
+I've been working with Scala for the last couple of years and like many, if not most, Scala developers, I've had my ups and downs with SBT. SBT is a powerful tool but it's easy to lose your footing.
 
-During our most recent hackweek at [Nitro](http://www.gonitro.com) I worked on an SBT plugin with some colleagues to help us create and manage our build pipelines in Jenkins. This was the first time I needed to handle proper command line input in SBT. This post is based on the things I learned in the process.
+During our most recent hackweek at [Nitro](http://www.gonitro.com) I worked on an SBT plugin with some colleagues to help us create and manage our build pipelines in Jenkins. This was the first time I needed to handle proper command line input in SBT.
+
+In this post, we'll look at implementing a command line tool in sbt, making use of its built-in parsing infrastructure to handle command line arguments. If you make it to the end, we'll also suggest an alternative, potentially more pragmatic approach than that suggested in the SBT documentation.
 
 ## mkdir
 
-To make the discussion more concrete, let's use an example that should be familiar to all developers. `mkdir` is among the first unix commands that you come across when you start using the command line. It has a small but non-trivial set of command line arguments, making it a good example to drive our discussion.
+To make the discussion more concrete, we'll use an example that should be familiar to all developers. `mkdir` is among the first unix commands that you come across when you start using the command line. It has a small but non-trivial set of command line arguments, making it a good example to drive our discussion.
 
 As a reminder, here's what it looks like:
 
@@ -47,15 +49,13 @@ object Command {
 
 ```
 
-The point of similarity between these two is the argument `parser: State => Parser[_]`. Let's look at the types in this function.
-
-We don't really need to concern ourselves with `State` for parsing user input for `sbt mkdir` so let's leave that for another day!
+The point of similarity between these two is the argument `parser: State => Parser[_]`.
 
 `Parser[T]` is the tool that SBT provides to, as you might have guessed, parse command line input[^4]. `Parser[T]` defines the low-level methods that you would need to use directly if you were defining a new `Parser[T]` implementation. Generally, you won't need to do this. Instead, SBT provides a number of low-level parsers for common scenarios in `sbt.complete.Parsers`[^5]. You will generally combine these together to make more useful `Parser[T]` instances using the combinators in `RichParser` which implicitly enriches instances of `Parser[T]`.
 
-If you decide that you need to use these parsers in your sbt project, you should definitely try to familiarise yourself with both `sbt.complete.Parser` and `sbt.complete.Parsers`.
+If you decide that you need to use these parsers in your SBT project, you should definitely try to familiarise yourself with both `sbt.complete.Parser` and `sbt.complete.Parsers`.
 
-Let's see what an `InputTask` and a `Command` would look like for `sbt mkdir` in our `build.sbt` file.
+Here is what an `InputTask` and a `Command` would look like for `sbt mkdir` in our `build.sbt` file.
 
 ```scala
 import sbt.complete.Parser // defines the basic Parser[T] infrastructure
@@ -94,7 +94,7 @@ def mkdirCmd = Command("mkdir")(_ => mkdirParser) { (state, mkdirCmd: MkdirComma
 commands ++= Seq(mkdirCmd)
 ```
 
-You're free to choose which suits your particular situation better. Whichever way you go, you will need a `Parser[Mkdir]` to handle the command line arguments so let's look at defining one!
+You're free to choose which suits your particular situation better. Whichever way you go, you will need a `Parser[MkdirCommand]` to handle the input.
 
 ## Grammar Time
 
@@ -137,7 +137,7 @@ flag 		::= v | p
 
 ## Parser[MkdirCommand]
 
-Let's use `MkdirCommand` to collect the information we want from `sbt mkdir`'s command line arguments.
+`MkdirCommand` is the data structure used to collect the information we want from `sbt mkdir`'s command line arguments.
 
 ```scala
 case class MkdirCommand(verbose: Boolean = false,
@@ -148,7 +148,7 @@ case class MkdirCommand(verbose: Boolean = false,
 
 Now that we have our grammar in place, writing the parsers is (theoretically) straightforward.
 
-The approach will be to create low-level parsers for the "terminals" in the grammar (those values that are only found on the right-hand side of the rules) using sbt's built in parsers.
+The approach will be to create low-level parsers for the "terminals" in the grammar (those values that are only found on the right-hand side of the rules) using SBT's built in parsers.
 
 Then we will build higher-level parsers by combining these until we get a `Parser[MkdirCommand]` that handles the entire `sbt mkdir` input.
 
@@ -156,7 +156,7 @@ Then we will build higher-level parsers by combining these until we get a `Parse
 
 Without a parser for handling directory names, `mkdir` wouldn't be much use so let's start here.
 
-Here's a solution that introduces us to a number of features of sbt parsers.
+Here's a solution that introduces us to a number of features of SBT parsers.
 
 ```scala
 val directory: Parser[File] = StringBasic.map(p => new File(p))
@@ -176,9 +176,9 @@ This example introduces serveral other new symbols:
 
 ## Parser[Mode]
 
-Let's build a parser for another part of our grammar. The mode option `-m mode` which can be either a "symbolic mode" or an "absolute mode".
+Next, let's build a parser for another part of our grammar - the mode option `-m mode`. The value of `mode` can be one of two types, "symbolic mode" or an "absolute mode", both defined in `chmod`'s man pages.
 
-First, let's define some simple data structures to help us represent these modes and their components in our code.
+First, we define some simple data structures to help us represent these modes and their components in our code.
 
 ```scala
 sealed trait Op {
@@ -249,7 +249,7 @@ val symbolicMode: Parser[SymbolicMode] = ((clause <~ ','.?)+).map(SymbolicMode)
 
 ```
 
-Let's look at some of the new symbols introduced here.
+This example introduces some new symbols:
 
 * `*` - this allows us to match a parser zero or more times
 * `~` - similar to `~>` this allows us to match parsers in sequence but in this case, it returns the successful result from both sides of `~`. In the example above `(op ~ permissions)` has a type `Parser[(Op, Seq[Permission])]`
@@ -276,20 +276,20 @@ SBT's parser infrastructure is powerful and working with grammars and parsers ca
 * Constructing parsers like this quite work-intensive. You may need to write a lot of `Parser[T]`s to get what you want done.
 * It can be difficult to express exactly what you want in terms of `Parser[T]`s. Writing parsers like this is quite low-level.
 * You cannot just rely on the documentation - you will need to read the source to get things done.
-* There are some rough edges to sbt's parsers. For example. you can use multple `Parser[T]`s in an InputTask but they are executed in reverse order. This is considered a [bug](https://github.com/sbt/sbt/issues/2033)
-* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`. This fragility raises questions about the maintainability of your sbt project.
+* There are some rough edges to SBT's parsers. For example, you can use multiple `Parser[T]` instances in an InputTask but they are evaluated in reverse order. This is [considered a bug](https://github.com/sbt/sbt/issues/2033).
+* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`. This fragility raises questions about the maintainability of your SBY project.
 
+## Epilogue: An alternative approach
 
-## Epilogue: An alternate approach
+Finally, I'd like to point out an alternative and more pragmatic approach to parsing command line arguments in SBT. This approach is much simpler, more accessible and likely more familiar to developers.
 
-Finally, I'd like to point out an alternative and more pragmatic approach to parsing command line arguments in sbt. The basic idea is to use the `spaceDelimited: Parser[Seq[String]]` parser to split the entire input string into space-separated strings. Then you can use  the simple and widely-used command line argument parsing library [scopt](https://github.com/scopt/scopt) to handle the parsing for you.
+The basic idea is to use the `spaceDelimited: Parser[Seq[String]]` parser to split the entire input string into space-separated strings. Then you can use the simple and widely-used command line argument parsing library [scopt](https://github.com/scopt/scopt) to handle the parsing for you.
 
-This removes the need to maintain a complex hierarchy of sbt `Parser`s, presumably improving maintainability. This approach is much simpler, more accessible and likely more familiar to developers. I would suggest starting with this approach and only taking on the complexity of building your own `Parser`s if you find it necessary.
+This removes the need to maintain a complex hierarchy of SBT parsers, presumably improving maintainability. I would suggest starting with this approach and only taking on the complexity of building your own `Parser`s if you find it necessary.
 
-This is what `sbt mkdir` might look like with this approach. Firstly, we define our `scopt.OptionParser` and data structure for holding the results:
+Here is what `sbt mkdir` might look like with this approach. Firstly, we define our `scopt.OptionParser` and data structure for holding the results:
 
 ```scala
-
 case class MkdirConfig(createIntermediate: Boolean = false,
                        verbose: Boolean = false,
                        mode: String = "0777",
@@ -347,7 +347,6 @@ def mkdirScoptCmd = Command.args("mkdir", parser.usage) { (state, args) =>
 
 commands ++= Seq(mkdirScoptCmd)
 ```
-
 
 ### Footnotes
 
