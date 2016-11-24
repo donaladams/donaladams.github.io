@@ -277,7 +277,7 @@ SBT's parser infrastructure is powerful and working with grammars and parsers ca
 * It can be difficult to express exactly what you want in terms of `Parser[T]`s. Writing parsers like this is quite low-level.
 * You cannot just rely on the documentation - you will need to read the source to get things done.
 * There are some rough edges to SBT's parsers. For example, you can use multiple `Parser[T]` instances in an InputTask but they are evaluated in reverse order. This is [considered a bug](https://github.com/sbt/sbt/issues/2033).
-* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`. This fragility raises questions about the maintainability of your SBY project.
+* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`. This fragility raises questions about the maintainability of your SBT project.
 
 ## Epilogue: An alternative approach
 
