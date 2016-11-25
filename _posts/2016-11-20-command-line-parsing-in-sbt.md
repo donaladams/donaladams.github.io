@@ -12,7 +12,7 @@ During our most recent hackweek at [Nitro](http://www.gonitro.com) I worked on a
 In this post, we'll look at two ways of handling command line input in SBT:
 
 1. The _SBT way_, using its [built-in parsers](http://www.scala-sbt.org/0.13/docs/Parsing-Input.html) from the ground up
-2. Using [scopt](https://github.com/scopt/scopt) to take care of the details for us
+2. Using [scopt](https://github.com/scopt/scopt) to handle command line parsing for using
 
 I would definitely recommend the second approach if you are looking to do this yourself as I believe it is simpler, more pragmatic and more robust to change.
 
@@ -39,7 +39,7 @@ When you want to add a command-line utility to an SBT project, you have two opti
 1. Add an [InputTask](http://www.scala-sbt.org/0.13/docs/Input-Tasks.html)
 2. Add a [Command](http://www.scala-sbt.org/0.13/docs/Commands.html)
 
-`InputTask` and `Command` are quite similar and could both be used for `sbt mkdir`, no matter what approach we take to parsing user input. The prevailing advice is to use `InputTask` as a first choice as `Command` is lower level, allowing you to actually modify the state of the build [^1].
+`InputTask` and `Command` are quite similar and could both be used for `sbt mkdir`, no matter what approach we take to parsing user input. The prevailing advice is to use `InputTask` as a first choice as `Command` is lower level, allowing you to actually modify the state of the build[^1].
 
 Here's a simplified definition of `InputTask`[^2] and the signature of one of the constructors for `Command`[^3]:
 
@@ -103,11 +103,11 @@ def mkdirCmd = Command("mkdir")(_ => mkdirParser) { (state, mkdirCmd: MkdirComma
 commands ++= Seq(mkdirCmd)
 ```
 
-So far there are both quite straightforward and you're free to choose which suits your preference and situation better. Whichever way you go, you will need a `Parser[MkdirCommand]` to handle the input.
+So far these are both quite straightforward and you're free to choose which suits your preference and situation better. Whichever way you go, you will need a `Parser[MkdirCommand]` to handle the input.
 
 ### Step 2: Define MkdirCommand to collect the input
 
-`MkdirCommand` is the simple data structure used to collect the information we want from `sbt mkdir`'s command line arguments.
+This is the simple data structure used to collect the information we want from `sbt mkdir`'s command line arguments.
 
 ```scala
 case class MkdirCommand(verbose: Boolean = false,
@@ -118,8 +118,8 @@ case class MkdirCommand(verbose: Boolean = false,
 
 ### Step 3: Grammar Time
 
-When working with parsers, it's really helpful to defining a grammar for the input you want to parse. This might sound
-daunting but it's really not so bad. Even if it's not completely formal, it will prove invaluable while we are building up our `Parser[T]` from smaller and smaller parsers.
+When working with parsers, it's really helpful to define a grammar for the input you want to parse. This might sound
+daunting but it's really not so bad. Even if it's not completely formal, it will prove invaluable while we are building up our `Parser[T]` from the ground up.
 
 Here's a possible BNF-like grammar[^6] for `mkdir`. This borrows from `man chmod` which helpfully provides a grammar for the "symbolic mode" used in `mkdir`.
 
@@ -164,6 +164,8 @@ Now that we have our grammar in place, writing the parsers is (theoretically) st
 The approach will be to create parsers for the "terminals" in the grammar (those values that are only found on the right-hand side of the rules) using SBT's built-in parsers.
 
 Then we will successively build larger and larger parsers by combining smaller ones until we get a `Parser[MkdirCommand]` that handles the entire `sbt mkdir` input defined by our grammmar.
+
+Let's look at some examples.
 
 #### Parsing directories
 
@@ -240,7 +242,7 @@ val absoluteMode: Parser[AbsoluteMode] = octalNumber.map(AbsoluteMode)
 
 ```
 
-Next up is the "symbolic" mode parser. The structure of this is more complicated but thankfully we have our grammar to guide us. Again, the process is the same - start at the terminals and work your way up.
+Next up is the "symbolic mode" parser. The structure of this is more complicated but thankfully we have our grammar to guide us. Again, the process is the same - start at the terminals and work your way up.
 
 ```scala
 // Terminal symbols
@@ -296,12 +298,12 @@ SBT's parser infrastructure is powerful and working with grammars and parsers ca
 * You cannot just rely on the documentation - you will need to read the source to get things done.
 * It has a complex symbolic syntax which is not to everybody's taste
 * There are some rough edges to SBT's parsers. For example, you can use multiple `Parser[T]` instances in an InputTask but they are evaluated in reverse order. This is [considered a bug](https://github.com/sbt/sbt/issues/2033).
-* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`. This fragility raises questions about the maintainability of your SBT project. If you have to handle a large number of command line arguments, you may find this approach frustrating.
+* It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`s. This fragility raises questions about the maintainability of your SBT project. If you have to handle a large number of command line arguments, you may find this approach frustrating.
 
 
 ## Approach 2: scopt
 
-Finally, I'd like to point out an alternative and more pragmatic approach to parsing command line arguments in SBT. This approach is simpler, more accessible and likely more familiar to developers.
+Now I'd like to point out an alternative and more pragmatic approach to parsing command line arguments in SBT. This approach is simpler, more accessible and likely more familiar to developers. This is the approach that I would take next time this problem comes up.
 
 The basic idea is to use the `spaceDelimited: Parser[Seq[String]]` parser to split the entire input string into space-separated strings. Then you can use the simple and widely-used command line argument parsing library [scopt](https://github.com/scopt/scopt) to handle the parsing for you.
 
@@ -309,16 +311,22 @@ This removes the need to maintain a complex hierarchy of SBT parsers, improving 
 
 Let's see what `sbt mkdir` might look like with this approach.
 
-### 
+## Step 1: Define MkdirConfig
 
-Firstly, we define our `scopt.OptionParser` and a data structure for holding the results:
+Firstly we define a data structure with sensible defaults to collect the information from the input. This is much the same as with the previous approach.
 
 ```scala
 case class MkdirConfig(createIntermediate: Boolean = false,
                        verbose: Boolean = false,
                        mode: String = "0777",
                        directories: Seq[File] = Seq())
+```
 
+## Step 2: Define an scopt.OptionParser
+
+Next, we define our `scopt.OptionParser`. This will do most of the parsing work for us.
+
+```scala
 
 lazy val parser = new scopt.OptionParser[MkdirConfig]("mkdir") {
   head("mkdir", "make directories")
@@ -343,7 +351,7 @@ lazy val parser = new scopt.OptionParser[MkdirConfig]("mkdir") {
 }
 ```
 
-## Step 2: Define an InputTask or Command
+## Step 3: Define an InputTask or Command
 
 Just like in the first approach, we need to add an InputTask or Command to your build definition.
 
@@ -383,11 +391,12 @@ You'll notice that we're not completely doing away with SBT's built in parsers i
 
 I much prefer this second approach to handling command line arguments in SBT for a number of reasons:
 
-* It's simple and pragmatic - you don't want your parsing code to take up more space than the actually code you want to run
+* It's simple and pragmatic - you don't want your parsing code to take up lots of space
 * No need to make low-level parsing decisions
 * You don't need to "look under the hood"
 * The `OptionParser` is more robust to modification as the individual parsing components are independant. This helps with maintainability.
-* I find it hard to see a downside to this approach.
+
+I find it hard to see a downside to this approach. Happy parsing!
 
 ### Footnotes
 
