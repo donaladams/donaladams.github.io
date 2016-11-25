@@ -301,7 +301,7 @@ SBT's parser infrastructure is powerful and working with grammars and parsers ca
 * It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`s. This fragility raises questions about the maintainability of your SBT project. If you have to handle a large number of command line arguments, you may find this approach frustrating.
 
 
-## Approach 2: scopt
+### Approach 2: scopt
 
 Now I'd like to point out an alternative and more pragmatic approach to parsing command line arguments in SBT. This approach is simpler, more accessible and likely more familiar to developers. This is the approach that I would take next time this problem comes up.
 
@@ -311,7 +311,7 @@ This removes the need to maintain a complex hierarchy of SBT parsers, improving 
 
 Let's see what `sbt mkdir` might look like with this approach.
 
-## Step 1: Define MkdirConfig
+### Step 1: Define MkdirConfig
 
 Firstly we define a data structure with sensible defaults to collect the information from the input. This is much the same as with the previous approach.
 
@@ -322,7 +322,7 @@ case class MkdirConfig(createIntermediate: Boolean = false,
                        directories: Seq[File] = Seq())
 ```
 
-## Step 2: Define an scopt.OptionParser
+### Step 2: Define an scopt.OptionParser
 
 Next, we define our `scopt.OptionParser`. This will do most of the parsing work for us.
 
@@ -351,7 +351,7 @@ lazy val parser = new scopt.OptionParser[MkdirConfig]("mkdir") {
 }
 ```
 
-## Step 3: Define an InputTask or Command
+### Step 3: Define an InputTask or Command
 
 Just like in the first approach, we need to add an InputTask or Command to your build definition.
 
