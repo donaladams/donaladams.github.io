@@ -311,8 +311,6 @@ lazy val parser = new scopt.OptionParser[MkdirConfig]("mkdir") {
     c.copy(mode = m)
   ).text("the directory creation mode")
 
-  help("help").text("prints this usage text")
-
   arg[File]("<dir>...").unbounded().required().action((x, c) =>
     c.copy(directories = c.directories :+ x)
   ).text("directories to create")
