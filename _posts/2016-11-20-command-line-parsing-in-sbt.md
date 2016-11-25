@@ -296,7 +296,7 @@ SBT's parser infrastructure is powerful and working with grammars and parsers ca
 * Constructing parsers like this quite work-intensive - you may need to write a lot of `Parser[T]`s to get what you want done.
 * It can be difficult to express exactly what you want in terms of `Parser[T]`s. Writing parsers like this is quite low-level.
 * You cannot just rely on the documentation - you will need to read the source to get things done.
-* It has a complex symbolic syntax which is not to everybody's taste
+* It has a complex symbolic syntax which is not to everybody's taste.
 * There are some rough edges to SBT's parsers. For example, you can use multiple `Parser[T]` instances in an InputTask but they are evaluated in reverse order. This is [considered a bug](https://github.com/sbt/sbt/issues/2033).
 * It is easy to break your `Parser[T]` with a small change in any of the component `Parser[T]`s. This fragility raises questions about the maintainability of your SBT project. If you have to handle a large number of command line arguments, you may find this approach frustrating.
 
@@ -391,9 +391,9 @@ You'll notice that we're not completely doing away with SBT's built in parsers i
 
 I much prefer this second approach to handling command line arguments in SBT for a number of reasons:
 
-* It's simple and pragmatic - you don't want your parsing code to take up lots of space
-* No need to make low-level parsing decisions
-* You don't need to "look under the hood"
+* It's simple and pragmatic - you don't want your parsing code to take up lots of space.
+* No need to make low-level parsing decisions.
+* You don't need to "look under the hood".
 * The `OptionParser` is more robust to modification as the individual parsing components are independant. This helps with maintainability.
 
 I find it hard to see a downside to this approach. Happy parsing!
