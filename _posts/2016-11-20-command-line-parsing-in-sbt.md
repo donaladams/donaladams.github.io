@@ -163,7 +163,7 @@ Now that we have our grammar in place, writing the parsers is (theoretically) st
 
 The approach will be to create parsers for the "terminals" in the grammar (those values that are only found on the right-hand side of the rules) using SBT's built-in parsers.
 
-Then we will successively build larger and larger parsers by combining smaller ones until we get a `Parser[MkdirCommand]` that handles the entire `sbt mkdir` input defined by our grammmar.
+Then we will successively build larger and larger parsers by combining smaller ones until we get a `Parser[MkdirCommand]` that handles the entire `sbt mkdir` input defined by our grammar.
 
 Let's look at some examples.
 
@@ -186,7 +186,7 @@ val directory: Parser[File] = StringBasic.map(p => new File(p))
 val directories: Parser[Seq[File]] = (Space ~> directory)+
 ```
 
-This example introduces serveral other new symbols:
+This example introduces several other new symbols:
 
 * `Space` - this a built-in parser that matches one or more whitespace characters
 * `~>` - this is used to combine parsers in sequence, returning the value to the right of `~>`, in this case the File representing the directory.
@@ -394,7 +394,7 @@ I much prefer this second approach to handling command line arguments in SBT for
 * It's simple and pragmatic - you don't want your parsing code to take up lots of space.
 * No need to make low-level parsing decisions.
 * You don't need to "look under the hood".
-* The `OptionParser` is more robust to modification as the individual parsing components are independant. This helps with maintainability.
+* The `OptionParser` is more robust to modification as the individual parsing components are independent. This helps with maintainability.
 
 I find it hard to see a downside to this approach. Happy parsing!
 
