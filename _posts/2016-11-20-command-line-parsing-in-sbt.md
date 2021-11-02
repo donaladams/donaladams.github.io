@@ -287,7 +287,7 @@ We're not done yet. To complete our `Parser[MkdirCommand]` we still need to defi
 
 The approach is the same as we have seen in the last two examples so it won't add much to show this here. Hopefully this has given you a good feeling for parsing user input the "SBT way".
 
-If you are interested in seeing this explicitly or trying out the full `Parser[MkdirCommand]`, the full source code for these examples is [here](https://github.com/epileptic-fish/sbt-parsers).
+If you are interested in seeing this explicitly or trying out the full `Parser[MkdirCommand]`, the full source code for these examples is [here](https://github.com/donaladams/sbt-parsers).
 
 ## Thoughts on the _SBT way_
 
