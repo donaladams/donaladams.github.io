@@ -3,9 +3,9 @@ title: General Dabblement
 email:
 description:
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "http://www.epilepticfish.com" # the base hostname & protocol for your site
-twitter_username: epileptic_fish
-github_username:  epileptic-fish
+url: "http://www.dadams.ie/" # the base hostname & protocol for your site
+twitter_username: wdadams
+github_username:  donaladams
 
 # Build settings
 markdown: kramdown
