@@ -5,6 +5,10 @@ date: 2016-11-23 12:00:00 +0100
 categories: blog
 ---
 
+
+___This is the blog version of a presentation I gave at [Scalawave 2017](https://scalawave.io/) in Gdańsk, Poland. A recording of the presentation can be found [here](https://www.youtube.com/watch?v=nmjfYQWasL4).___
+
+
 I've been working with Scala for the last couple of years and like many (if not most) Scala developers, I've had my ups and downs with [SBT](http://www.scala-sbt.org/). SBT is a powerful tool but it's easy to lose your footing.
 
 During our most recent hackweek at [Nitro](http://www.gonitro.com) I worked on an SBT plugin with some colleagues to help us create and manage our build pipelines in Jenkins. This was the first time I needed to handle proper command line input in SBT.
