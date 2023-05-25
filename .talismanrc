@@ -1,0 +1,4 @@
+fileignoreconfig:
+- filename: assets/js/crusty.min.js
+  checksum: 9cb2931fd8e0d072c8900e798f646e18aa35ecf793150cae9e78ac53997e4245
+version: "1.0"
