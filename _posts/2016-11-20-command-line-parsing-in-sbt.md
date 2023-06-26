@@ -410,4 +410,3 @@ I find it hard to see a downside to this approach. Happy parsing!
 [^4]: [SBT docs on Parsing Input](http://www.scala-sbt.org/0.13/docs/Parsing-Input.html)
 [^5]: [Parsers.scala](https://github.com/sbt/sbt/blob/0.13/util/complete/src/main/scala/sbt/complete/Parsers.scala)
 [^6]: [Backhaus-Naur Form grammars](https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form)
-
