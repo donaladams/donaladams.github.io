@@ -51,25 +51,6 @@
         border-radius: 5px;
         text-align: right;
 
-        // .menu-icon {
-        //     display: block;
-        //     float: right;
-        //     width: 36px;
-        //     height: 26px;
-        //     line-height: 0;
-        //     padding-top: 10px;
-        //     text-align: center;
-
-        //     > svg {
-        //         width: 18px;
-        //         height: 15px;
-
-        //         path {
-        //              fill: $grey-color-dark;
-        //         }
-        //     }
-        // }
-
         .trigger {
             clear: both;
             display: none;
@@ -111,6 +92,9 @@
 .social-media-list {
     list-style: none;
     margin-left: 0;
+    li > a {
+        text-decoration: none;
+    }
 }
 
 .footer-col-wrapper {
@@ -179,9 +163,20 @@
 .post-list {
     margin-left: 0;
     list-style: none;
+    width: 100%;
+
 
     > li {
         margin-bottom: $spacing-unit;
+        a {
+            display: flex;
+            justify-content: start;
+            .post-list-date {
+                color: $grey-color;
+                padding-right: 1em;
+                width: 15%;
+            }
+        }
     }
 }
 
@@ -252,4 +247,14 @@ img.breadshot {
     li {
         margin-bottom: 1em;
     }
+}
+
+// Social links
+
+.icon-brand-name {
+    vertical-align: middle;
+}
+
+.icon--linkedin {
+    padding-right: 5px;
 }
